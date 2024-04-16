@@ -25,9 +25,14 @@ from tensorflow.contrib import learn
 from sklearn.preprocessing import LabelEncoder
 from tflearn.data_utils import to_categorical, pad_sequences
 import theano
-theano.config.mode = 'DEBUG_MODE'
-theano.config.exception_verbosity = 'high'
+# theano.config.mode = 'DEBUG_MODE'
+# theano.config.exception_verbosity = 'high'
 import keras
+from sklearn import metrics
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import roc_auc_score
+import pandas as pd
 
 print(f"Imports loaded successfully")
 
@@ -270,7 +275,7 @@ data_dict=get_train_test(data, eval_data, x_text, eval_text, labels, eval_labels
 data, trainX, trainY, testX, testY, vocab_processor = return_data(data_dict)
 
 #dynamically pad sequences
-max_sequence_length = 1103 #from the model
+max_sequence_length = 303 #from the model
 testX_padded = pad_sequences(testX, maxlen=max_sequence_length, padding='post')
 trainX_padded= pad_sequences(trainX, maxlen=max_sequence_length, padding='post')
 print(testX_padded.shape)
@@ -291,19 +296,105 @@ pdb.set_trace()
 learn_rate = 0.01
 adam = optimizers.Adam(lr=learn_rate, beta_1=0.9, beta_2=0.999)
 pdb.set_trace()
-new_model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
+#define precision and recall
+# new_model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
+# temp = new_model.predict(trainX_padded)
+# y_pred  = np.argmax(temp, 1)
+# y_true = np.argmax(trainY, 1)
+# precision = metrics.precision_score(y_true, y_pred, average=None)
+# recall = metrics.recall_score(y_true, y_pred, average=None)
+# f1_score = metrics.f1_score(y_true, y_pred, average=None)
+#recompile model + custom metrics
+# define precision and recall 
+def precision(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+def recall(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+def f1_score(y_true, y_pred):
+    precision_value = precision(y_true, y_pred)
+    recall_value = recall(y_true, y_pred)
+    f1_score = 2 * ((precision_value * recall_value) / (precision_value + recall_value + K.epsilon()))
+    return f1_score
+new_model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy',precision, recall, f1_score])
 pdb.set_trace()
 keras.utils.plot_model(new_model, show_shapes=True)
 pdb.set_trace()
 # evaluate_model(new_model, testX_padded, testY)
-evaluate_model(new_model, trainX_padded, trainY)
-pdb.set_trace()
+# try:
+#     evaluate_model(new_model, trainX_padded, trainY)
+# except:
+#     print(f"evaluate_model failed")
+# pdb.set_trace()
 # new_model.evaluate(testX_padded, testY, batch_size=8)
-new_model.evaluate(trainX_padded, testY, batch_size=8)
+evaluation_results = new_model.evaluate(testX_padded, testY, batch_size=8)
+
+print(new_model.metrics_names)
+print(evaluation_results)
+pdb.set_trace()
+
+# for i, metric_name in enumerate(new_model.metrics_names[0:]):
+#     print(metric_name + ":", evaluation_results[i+1])
 # print("test loss, test acc:", results)
 # evaluate_model(new_model, testX, testY)   
 
+#get predictions
+predictions = new_model.predict(testX_padded)
+pdb.set_trace()
 
+predicted_labels = np.argmax(predictions, axis=1)
+binary_testY = np.argmax(testY, axis=1)
+
+
+pdb.set_trace()
+# Calculate precision, recall, and F1 score
+precision = precision_score(binary_testY, predicted_labels, average=None)
+recall = recall_score(binary_testY, predicted_labels, average= None)
+f1 = metrics.f1_score(binary_testY, predicted_labels, average=None)
+
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1)
+print(classification_report(binary_testY, predicted_labels))
+
+#list to deposit mistakes
+incorrect_indices = []
+#iterate over predictions to find mismatches between prediction and true category
+for i in range(len(predictions)):
+    predicted_class = np.argmax(predictions[i])
+    true_class = np.argmax(testY[i])
+    if predicted_class != true_class:
+        incorrect_indices.append(i)
+
+# pdb.set_trace()
+
+#put incorrect predictions  into a dictionary     
+
+incorrect_predictions=[]
+
+for idx in incorrect_indices:
+    info = {
+        "Index": idx,
+        "Predicted_Class": np.argmax(predictions[idx]),
+        "True_Class": np.argmax(testY[idx]),
+        # Add more information if needed
+        # "Sample": x_test[idx],
+    }
+
+    incorrect_predictions.append(info)
+
+# pdb.set_trace()    
+
+#convert to dataframe and save as csv
+incorrect_df = pd.DataFrame(incorrect_predictions)
+incorrect_df.to_csv("incorrect_predictions.csv", index=False)
 
 
 # run evaluate_model(). 
