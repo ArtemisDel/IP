@@ -9,3 +9,8 @@
 **model.png**   Visualisation of saved model layers
 
 **checkpoint.model.keras** saved model keras file
+
+**weights_visualise2.py** contains code to visualise attenton weights
+
+**weights_visualise2.ipynb** same as weights_visualise.py but in jupyter notebook form 
+
