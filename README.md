@@ -1,6 +1,6 @@
 **all_code.py** Contain main code for training models
 
-**model.py**    Defines functions needed to create models
+**models.py**    Defines functions needed to create models
 
 **evaluate_saved_model.py**  Contains code to load saved model and test on new data
 
