@@ -13,7 +13,7 @@
 
 To load data in any of the scripts you need to copy paste the train and test sets you want with the names formspring_data.pkl and eval_formspring_data.pkl into the data folder. 
 
-The directory of word_vectors is empty because the glove embeddings could not be uploaded due to their size, but they can be downloaded from [here](https://nlp.stanford.edu/data/glove.840B.300d.zip). Rename the unzipped 300d file to glove.6B.300d.txt. 
+The folder  **word_vectors** is empty because the glove embeddings could not be uploaded due to their size, but they can be downloaded from [here](https://nlp.stanford.edu/data/glove.840B.300d.zip). Rename the unzipped 300d file to glove.6B.300d.txt. 
 
 The original code by can be accessed in [GitHub](https://github.com/sweta20/Detecting-Cyberbullying-Across-SMPs). 
 
