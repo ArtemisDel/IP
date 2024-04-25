@@ -19,11 +19,19 @@ The original code by can be accessed in [GitHub](https://github.com/sweta20/Dete
 
 
 **Library Requirements:** 
+
 Python 3.7
+
 keras==2.3.1
+
 tensorflow==1.13.1 
+
 tflearn==0.3.2
+
 scikit-learn==0.21.3
+
 pandas==0.25.2
+
 tqdm==4.36.1
+
 numpy=1.21.6   
